@@ -12,12 +12,13 @@ Read the instructions at: https://rosettacode.org/wiki/Bulls_and_cows
 
 fn main() {
     env_logger::init();
-    info!("Starting the game!");
-    let app = clap::App::new(clap::crate_name!())
+    clap::App::new(clap::crate_name!())
         .author(clap::crate_authors!())
         .version(VERSION)
         .about(clap::crate_description!())
-        .long_about(LONG_ABOUT);
+        .long_about(LONG_ABOUT)
+        .get_matches();
+    info!("Starting the game!");
     if let Err(e) = bulls_and_cows::run() {
         eprintln!("{}", e);
         eprintln!("Sorry, but you lost!");

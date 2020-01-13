@@ -29,12 +29,9 @@ fn create_random_number() -> u32 {
     let die = Uniform::from(0..10);
     loop {
         let number: u32 = die.sample(&mut rng);
-        match chosen.iter().position(|&x| x == number) {
-            None => {
-                chosen[index] = number;
-                index += 1;
-            },
-            _ => (),
+        if None == chosen.iter().position(|&x| x == number) {
+            chosen[index] = number;
+            index += 1;
         }
         if index >= 4 {
             break;
@@ -63,6 +60,8 @@ fn validate_input(input: &str) -> ValidationResult {
     Ok(guess)
 }
 
+/// Returns the number of bulls (matches at the exact position) and cows
+/// (matches) given two string slices
 fn get_bulls_and_cows(chosen_number: &str, user_guess: &str) -> (u32, u32) {
     (0, 0)
 }
@@ -100,8 +99,7 @@ pub fn run() -> Result<(), String>  {
         // Truncate trailing whitespace
         let len = buffer.trim_end_matches(&['\r', '\n'][..]).len();
         buffer.truncate(len);
-        let guess = validate_input(&buffer);
-        match guess {
+        match validate_input(&buffer) {
             Err(validation) => {
                 println!("Validation error!: {}\nTry again", validation);
             },
