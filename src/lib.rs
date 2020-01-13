@@ -1,11 +1,9 @@
 extern crate rand;
 use rand::distributions::{Distribution, Uniform};
 #[macro_use] extern crate log;
-use std::io::{self, Read};
-use std::num::{self};
+use std::io;
 extern crate thiserror;
 use thiserror::Error;
-use std::error::Error;
 
 
 type ValidationResult = std::result::Result<u32, ValidationError>;
@@ -63,7 +61,22 @@ fn validate_input(input: &str) -> ValidationResult {
 /// Returns the number of bulls (matches at the exact position) and cows
 /// (matches) given two string slices
 fn get_bulls_and_cows(chosen_number: &str, user_guess: &str) -> (u32, u32) {
-    (0, 0)
+
+    let (mut bulls, mut cows) = (0u32, 0u32);
+    let guess: String = format!("{:0>4}", user_guess);
+    debug!("User guessed '{}'", guess);
+    for (index, c) in guess.chars().enumerate() {
+        if let Some(i) = chosen_number.chars().position(|x| x == c) {
+            if index == i {
+                debug!("Got bull match at index '{}'", index);
+                bulls += 1;
+            } else {
+                debug!("Got cow match at index '{}'", index);
+                cows += 1;
+            }
+        };
+    }
+    (bulls, cows)
 }
 
 #[derive(Debug)]
@@ -101,13 +114,15 @@ pub fn run() -> Result<(), String>  {
         buffer.truncate(len);
         match validate_input(&buffer) {
             Err(validation) => {
-                println!("Validation error!: {}\nTry again", validation);
+                println!("Invalid input: {}\nTry again!", validation);
             },
             Ok(number) => {
                 if number == chosen.number {
+                    println!("You won! Congratulations!");
                     break;
                 }
-                println!("Try again");
+                let (bulls, cows) = get_bulls_and_cows(&chosen.string, &buffer);
+                println!("Nope: you got {} bulls and {} cows. Try again", &bulls, &cows);
             }
         }
     }
@@ -137,5 +152,13 @@ mod tests {
         assert_eq!(ok, 1234u32);
         let ok = validate_input("234").expect("Should not fail");
         assert_eq!(ok, 234u32);
+    }
+
+    #[test]
+    fn test_bc_count() {
+        assert_eq!((0, 0), get_bulls_and_cows("1234", "5678"));
+        assert_eq!((0, 4), get_bulls_and_cows("1234", "4321"));
+        assert_eq!((1, 3), get_bulls_and_cows("0123", "312"));
+        assert_eq!((4, 0), get_bulls_and_cows("0123", "123"));
     }
 }
