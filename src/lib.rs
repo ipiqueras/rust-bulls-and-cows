@@ -1,3 +1,15 @@
+//! # Bulls and cows
+//!
+//! `bulls_and_cows` is an implementation of the [Bulls and Cows](https://rosettacode.org/wiki/Bulls_and_cows)
+//! coding game.
+//!
+//! It is just an excuse to learn to program in Rust. The implementation
+//! should not only fulfill the task but it must be a complete command line
+//! application that includes testing, logging and the documentation
+//! you are reading now.
+//!
+//! The solution is far from optimal, since these are my first steps in this
+//! language!
 extern crate rand;
 use rand::distributions::{Distribution, Uniform};
 #[macro_use] extern crate log;
@@ -5,10 +17,11 @@ use std::io;
 extern crate thiserror;
 use thiserror::Error;
 
-
+/// A type to represent the output of validate_input
 type ValidationResult = std::result::Result<u32, ValidationError>;
 
 #[derive(Error, Debug)]
+/// Custom error to represent all possible errors that might arise parsing user input
 pub enum ValidationError {
     #[error("Parse error on user input")]
     Parse(#[from] std::num::ParseIntError),
@@ -18,7 +31,7 @@ pub enum ValidationError {
 
 /// Creates a random number to be guessed
 ///
-/// I must be a four digit number, without duplication
+/// It must be a four digit number, without duplication
 fn create_random_number() -> u32 {
 
     let mut chosen: [u32; 4] = [10, 10, 10, 10];
@@ -39,8 +52,20 @@ fn create_random_number() -> u32 {
 }
 
 /// Validate user input against the required format of a guess: four distinct
-/// numbers
-fn validate_input(input: &str) -> ValidationResult {
+/// numbers.
+///
+/// Example, test some inputs:
+/// ```
+/// # type ValidationResult = std::result::Result<u32, crate::bulls_and_cows::ValidationError>;
+/// let result = bulls_and_cows::validate_input("1123").expect_err("will fail");
+/// assert_eq!(
+///     "Input does not respect the rule `Digits cannot be repeated`",
+///     format!("{}", result)
+/// );
+/// let result = bulls_and_cows::validate_input("1234").unwrap();
+/// assert_eq!(1234u32, result);
+/// ```
+pub fn validate_input(input: &str) -> ValidationResult {
 
     let mut diff: Vec<u32> = Vec::new();
     let guess = input.parse::<u32>()?;
@@ -60,7 +85,19 @@ fn validate_input(input: &str) -> ValidationResult {
 
 /// Returns the number of bulls (matches at the exact position) and cows
 /// (matches) given two string slices
-fn get_bulls_and_cows(chosen_number: &str, user_guess: &str) -> (u32, u32) {
+///
+/// Example, test some inputs:
+/// ```
+/// assert_eq!(
+///     bulls_and_cows::get_bulls_and_cows("1234", "1234"),
+///     (4, 0)
+/// );
+/// assert_eq!(
+///     bulls_and_cows::get_bulls_and_cows("1234", "4321"),
+///     (0, 4)
+/// );
+/// ```
+pub fn get_bulls_and_cows(chosen_number: &str, user_guess: &str) -> (u32, u32) {
 
     let (mut bulls, mut cows) = (0u32, 0u32);
     let guess: String = format!("{:0>4}", user_guess);
@@ -99,8 +136,9 @@ impl ChosenSecret {
     }
 }
 
+/// Main application loop, generates the secret number and allows the user
+/// to input guesses, calculating the number of bulls and cows on each attempt.
 pub fn run() -> Result<(), String>  {
-
     println!("I created a random number using four distinct digits...");
     println!("You should guess which one it is");
     let chosen = ChosenSecret::new();
